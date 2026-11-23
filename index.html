@@ -69,6 +69,8 @@ header{display:flex;align-items:center;gap:10px;min-height:56px}
 #winPals{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 #winPals svg{width:150px;height:150px}
 #winUnlock{font-size:20px;font-weight:800;color:#4A5878;text-align:center}
+#winBuild{font-family:system-ui,sans-serif;font-size:17px;font-weight:600;line-height:1.4;color:#14213D;background:#FFF0C2;border:3px solid #14213D;border-radius:18px;padding:10px 18px;max-width:640px;text-align:center}
+#winBuild:empty{display:none}
 #confetti span{position:fixed;top:-20px;width:14px;height:20px;border-radius:4px;animation:fall 2.4s linear forwards;z-index:11}
 @keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
 #flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:20}
@@ -121,6 +123,7 @@ header{display:flex;align-items:center;gap:10px;min-height:56px}
     <h2 id="winTitle">Chapter done!</h2>
     <div id="winPals"></div>
     <div id="winUnlock"></div>
+    <div id="winBuild"></div>
     <div class="row">
       <button class="bigbtn sec" id="winMap" aria-label="Back to the story map"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></button>
       <button class="bigbtn sec" id="winAgain" aria-label="Play again"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#14213D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v5h5"/></svg></button>

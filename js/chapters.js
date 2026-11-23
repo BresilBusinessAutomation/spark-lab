@@ -398,7 +398,7 @@ async function ch8(){
   const rel=()=>{if(!holding)return;holding=false;
     if(fill>=.8){busy=true;flashScreen();sfx.flash();burst.on=true;drawCam(true);later(()=>{burst.on=false;drawCam(false);},650);
       const s=slots[photos];s.innerHTML=`<rect x="-46" y="-52" width="92" height="104" rx="6" fill="#fff" stroke="${I}" stroke-width="3"/><rect x="-38" y="-44" width="76" height="70" fill="#DCE8FF"/><g transform="translate(0 -6) scale(.6)">${CH.zip({mood:['wow','grin','cool'][photos]})}</g>`;photos++;fill=0;setProgress(photos,3);
-      say('cap','BLAST! All my electricity came out at once!','BLAST!').then(()=>{busy=false;});}
+      say('cap','Cheese! All my electricity came out at once!','Cheese!').then(()=>{busy=false;});}
     else if(fill>.05){fill=0;sfx.bonk();say('cap','Not enough! Fill my cheeks right up!','More! Fill me up!');}};
   ['pointerup','pointerleave','pointercancel'].forEach(ev=>btn.addEventListener(ev,rel));
   setProgress(0,3);
@@ -409,7 +409,12 @@ async function ch8(){
   stage();
   const b=new Board({canWire:false});const bolt=b.add('bolt',160,330);const sw=b.add('swish',360,170);const cap=b.add('cap',560,330);const rz=b.add('rez',740,170);const dot=b.add('dot',860,330);
   [[b.pin(bolt,'p'),b.pin(sw,'a')],[b.pin(sw,'b'),b.pin(cap,'a')],[b.pin(sw,'b'),b.pin(rz,'a')],[b.pin(rz,'b'),b.pin(dot,'a')],[b.pin(dot,'k'),b.pin(bolt,'n')],[b.pin(cap,'b'),b.pin(bolt,'n')]].forEach(([x,y])=>b.wire(x,y,{fixed:true}));
-  say('cap','Tap Swish to fill my cheeks up!','Tap Swish!');
+  const pbar=g('',500,70);
+  addTick(()=>{const f=clamp(cap.fill),W=300,H=46,n=Math.round(f*9);
+    pbar.innerHTML=`<rect x="${-W/2}" y="${-H/2}" width="${W}" height="${H}" rx="16" fill="#EEF2F8" stroke="${I}" stroke-width="4"/>`
+      +[...Array(n)].map((_,i)=>`<circle cx="${(-W/2+22+i*31).toFixed(1)}" cy="0" r="9" fill="${C.yellow}" stroke="${I}" stroke-width="2.5"/>`).join('')
+      +`<text y="${H/2+20}" text-anchor="middle" ${FONT} font-size="17" fill="${C.grey}">Cap power: fills and empties</text>`;});
+  say('cap','Tap Swish to fill my cheeks up! Watch my power bar.','Tap Swish!');
   await waitUntil(()=>sw.closed&&cap.fill>.95);await wait(700);
   await line('cap','Mmm, I am full. And Dot is shining!','I am full!');
   say('cap','Now tap Swish again to cut Bolt off. Watch Dot!','Tap Swish. Watch Dot!');
@@ -435,8 +440,11 @@ async function ch9(){
   const crane=g('',cx,0);const clips=g('',0,0);
   const drawClip=(x,y,r)=>`<g transform="translate(${x} ${y}) rotate(${r})"><path d="M-14 -6 h26 a6 6 0 0 1 0 12 h-22 a4 4 0 0 1 0 -8 h18" stroke="#8C96A8" stroke-width="3.5" fill="none" stroke-linecap="round"/></g>`;
   const offs=[[-26,0,10],[0,4,-20],[24,-2,30],[-12,14,-40],[14,16,5]];
-  addTick(()=>{crane.setAttribute('transform',`translate(${cx} 0)`);crane.innerHTML=`<rect x="-34" y="66" width="68" height="30" rx="8" fill="${I}"/><path d="M0 96 V250" stroke="${I}" stroke-width="4"/>${on?`<ellipse cx="0" cy="300" rx="80" ry="40" fill="none" stroke="${C.red}" stroke-width="3" stroke-dasharray="7 7" opacity=".7"/>`:''}<rect x="-14" y="250" width="28" height="76" rx="5" fill="#B8C5DB" stroke="${I}" stroke-width="3"/>${[0,1,2,3].map(i=>`<ellipse cx="0" cy="${262+i*16}" rx="22" ry="6" fill="none" stroke="${on?'#FF9A4D':'#D9792B'}" stroke-width="5"/>`).join('')}<circle cx="0" cy="81" r="44" fill="transparent"/>`;
-    if(att)clips.innerHTML=offs.map(o=>drawClip(cx+o[0]*.6,340+o[1]*.5,o[2])).join('');else if(inBox)clips.innerHTML=offs.map(o=>drawClip(760+o[0],480+o[1],o[2])).join('');else clips.innerHTML=offs.map(o=>drawClip(pileX+o[0],520+o[1],o[2])).join('');
+  const cpos=offs.map(o=>({x:pileX+o[0],y:520+o[1]}));
+  addTick(dt=>{crane.setAttribute('transform',`translate(${cx} 0)`);crane.innerHTML=`<rect x="-34" y="66" width="68" height="30" rx="8" fill="${I}"/><path d="M0 96 V250" stroke="${I}" stroke-width="4"/>${on?`<ellipse cx="0" cy="300" rx="80" ry="40" fill="none" stroke="${C.red}" stroke-width="3" stroke-dasharray="7 7" opacity=".7"/>`:''}<rect x="-14" y="250" width="28" height="76" rx="5" fill="#B8C5DB" stroke="${I}" stroke-width="3"/>${[0,1,2,3].map(i=>`<ellipse cx="0" cy="${262+i*16}" rx="22" ry="6" fill="none" stroke="${on?'#FF9A4D':'#D9792B'}" stroke-width="5"/>`).join('')}<circle cx="0" cy="81" r="44" fill="transparent"/>`;
+    const tgt=offs.map(o=>att?{x:cx+o[0]*.6,y:340+o[1]*.5}:(inBox?{x:760+o[0],y:480+o[1]}:{x:pileX+o[0],y:520+o[1]}));
+    const k=Math.min(1,dt*13);cpos.forEach((q,i)=>{q.x+=(tgt[i].x-q.x)*k;q.y+=(tgt[i].y-q.y)*k;});
+    clips.innerHTML=cpos.map((q,i)=>drawClip(q.x,q.y,offs[i][2])).join('');
     if(on&&!att&&!inBox&&Math.abs(cx-pileX)<70){att=true;sfx.snap();}
     if(!on&&att){att=false;if(Math.abs(cx-760)<95){inBox=true;sfx.ding();}else{pileX=clamp(cx,150,640);sfx.bonk();}}});
   let dragC=false;const dn=e=>{const p=toSvg(e);if(Math.abs(p.x-cx)<60&&p.y<360&&p.y>50){e.preventDefault();dragC=true;}};const mv=e=>{if(dragC)cx=clamp(toSvg(e).x,150,860);};const up=()=>dragC=false;

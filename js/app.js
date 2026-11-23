@@ -2,7 +2,7 @@
 /* Menus, story map, workshop, pals, grown-up corner, progress */
 const CHAPS=[
   {name:'Meet Zip',topic:'What electricity is',char:'zip',run:ch1,pals:['zip'],parts:[],build:'Hunt round the house together for things that use electricity, and things that don\'t.'},
-  {name:'Making electricity',topic:'Generators, batteries, + and −',char:'bolt',opts:{mood:'grin'},run:ch2,pals:['bolt'],parts:['bolt'],build:'Look at the + and − on real AA batteries, and put them in a torch the right way round.'},
+  {name:'Making electricity',topic:'Generators, batteries, + and −',char:'bolt',opts:{mood:'grin'},run:ch2,pals:['bolt'],parts:['bolt'],build:'Look at the + and − on real AA batteries and put them in a torch the right way round. Then make a lemon or potato battery: push a copper coin and a galvanised (zinc) nail into each one, clip a wire from the nail of one to the coin of the next, and three or four in a row will just light a red LED.'},
   {name:'Draw the loop',topic:'Wires and circuits',char:'trax',run:ch3,pals:['trax','glow'],parts:['glow'],build:'AA battery holder, a small bulb or LED with resistor, and 2 clip wires: make the loop on the table.'},
   {name:'Pass or Stop',topic:'Conductors and insulators',char:'glow',opts:{level:1,mood:'grin'},run:ch4,pals:[],parts:[],build:'Battery + LED tester with two loose wire ends. Test spoons, foil, erasers and pencils around the house.'},
   {name:'Swish the switch',topic:'Switches',char:'swish',run:ch5,pals:['swish'],parts:['swish'],build:'Toilet-roll torch with a paper-clip switch (2 AA batteries, foil, tape, an LED).'},
@@ -63,8 +63,9 @@ async function runChapter(i){clearScene();screen='chapter';curCh=i;const c=CHAPS
   await c.run();if(my!==tok)return;finishChapter(i);}
 function finishChapter(i){const c=CHAPS[i];const was=isDone(i);prog.done[i]=true;save();sfx.win();confetti();
   $('#winTitle').textContent=`Chapter ${i+1} done!`;
-  const pals=c.pals.length?c.pals:[c.char];$('#winPals').innerHTML=pals.map(k=>`<svg viewBox="-110 -110 220 250" aria-hidden="true"><g class="dance">${CH[k](Object.assign({},AVATAR[k]||{},{mood:'grin'}))}</g>${pill(0,120,NAMES[k],(PALS.find(p=>p[0]===k)||[])[1]||'')}</svg>`).join('');
+  const pals=c.pals.length?c.pals:[c.char];$('#winPals').innerHTML=pals.map(k=>`<svg viewBox="-110 -110 220 275" aria-hidden="true"><g class="dance">${CH[k](Object.assign({},AVATAR[k]||{},{mood:'grin'}))}</g>${pill(0,120,NAMES[k],(PALS.find(p=>p[0]===k)||[])[1]||'')}</svg>`).join('');
   const parts=c.parts.map(t=>WS_LABEL[t]).filter(Boolean);$('#winUnlock').textContent=(c.pals.length?`New Parts Pal${c.pals.length>1?'s':''}! `:'')+(parts.length?`New in the Workshop: ${parts.join(', ')}`:'');
+  $('#winBuild').innerHTML=c.build?`<b>Build it for real:</b> ${esc(c.build)}`:'';
   $('#winNext').style.display=i<CHAPS.length-1?'':'none';$('#win').classList.remove('hidden');}
 function confetti(){const box=$('#confetti');box.innerHTML='';const cols=[C.yellow,C.orange,C.blue,C.green,C.purple,C.red];for(let k=0;k<44;k++){const s=document.createElement('span');s.style.left=Math.random()*100+'vw';s.style.background=cols[k%cols.length];s.style.animationDelay=(Math.random()*.8)+'s';s.style.animationDuration=(1.8+Math.random()*1.4)+'s';box.appendChild(s);}setTimeout(()=>box.innerHTML='',3600);}
 $('#winMap').onclick=()=>{sfx.click();showMap();};
