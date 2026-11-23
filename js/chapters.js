@@ -285,13 +285,21 @@ async function ch6(){
   await line('zip','It is like squeezing a garden hose. Less water comes out!','Like squeezing a hose!');
   /* board */
   stage();
-  const b=new Board();const bolt=b.add('bolt',220,320);const glow=b.add('glow',760,280);const rez=b.add('rez',500,470,{init:{R:33},sizes:[33,100,470]});
+  const b=new Board();const bolt=b.add('bolt',220,320);const glow=b.add('glow',760,280);
   b.wire(b.pin(bolt,'p'),b.pin(glow,'b'),{fixed:true});
-  b.ghost(b.pin(glow,'a'),b.pin(rez,'b'));b.ghost(b.pin(rez,'a'),b.pin(bolt,'n'));
+  b.ghost(b.pin(glow,'a'),b.pin(bolt,'n'));
   const ctr=g('',500,70);addTick(()=>{const n=Math.round(Math.abs(glow.I)*400);ctr.innerHTML=`<rect x="-120" y="-34" width="240" height="68" rx="20" fill="#FFF8E1" stroke="${I}" stroke-width="3"/><text y="-6" text-anchor="middle" ${FONT} font-size="15" fill="${C.grey}">Zips per second</text><text y="24" text-anchor="middle" ${FONT} font-size="30" fill="${I}">${n}</text>`;});
-  say('rez','Draw the dotted wires to put me in the loop with Glow.','Put me in the loop!');
+  say('zip','First, just Bolt and Glow. Draw the dotted wire, and watch how fast the Zips go.','Draw the wire!');
+  await waitUntil(()=>glow.bright>.5);await wait(900);
+  await line('glow','Look at me! Lovely and bright, and lots of Zips every second. That is normal speed.','Normal speed!');
+  /* same loop, now with Rez in it, so the number to compare is still on screen */
+  const direct=b.wires.find(w=>!w.fixed);if(direct)b.rmWire(direct,true);
+  b.clearGhosts();
+  const rez=b.add('rez',500,470,{init:{R:33},sizes:[33,100,470]});
+  b.ghost(b.pin(glow,'a'),b.pin(rez,'b'));b.ghost(b.pin(rez,'a'),b.pin(bolt,'n'));
+  say('rez','Now draw the dotted wires to put me in the loop too. Keep watching that number.','Put me in the loop!');
   await waitUntil(()=>b.ghostsDone()&&glow.bright>.05);await wait(500);
-  await line('glow','Hmm, I am a bit dimmer now. Fewer Zips are reaching me.','I am dimmer!');
+  await line('glow','Hmm, I am dimmer now, and the number went down. Fewer Zips are reaching me.','Dimmer: fewer Zips!');
   rez.o.adjust=true;
   say('rez','Tap me to make my road narrower. Make Glow sleepy for bedtime!','Tap Rez to squeeze!');
   await waitUntil(()=>rez.R>=100);await wait(800);
@@ -303,19 +311,20 @@ async function ch6(){
 async function ch7(){
   stage();spot('dot',{lit:true,mood:'grin'},500,240,2,'Dot','LED light');
   await talk([['dot',"Hi! I'm Dot, an LED! I'm a light that uses only a teeny bit of energy.","I'm Dot, an LED!"],
-    ['dot','I have a long leg and a short leg. My long leg goes towards Bolt\'s PLUS side.','Long leg to PLUS'],
-    ['dot','Electricity can only go through me ONE way. Backwards, I stay dark!','One way only!'],
+    ['dot','One leg of mine is PLUS and the other is MINUS. My PLUS leg must go round to Bolt\'s PLUS side.','Plus leg to PLUS'],
+    ['dot','Electricity can only go through me ONE way. Backwards, I stay dark! On a real LED, the PLUS leg is the longer one.','One way only!'],
     ['dot','And I am delicate. Rez is my bodyguard. Without Rez, too many Zips rush in and I go POP!','Rez is my bodyguard']]);
   /* A: one way */
   stage();
   let b=new Board();let bolt=b.add('bolt',200,320);let rez=b.add('rez',480,180);let dot=b.add('dot',780,290,{init:{rev:true}});
   b.ghost(b.pin(bolt,'p'),b.pin(rez,'a'));b.ghost(b.pin(rez,'b'),b.pin(dot,'a'));b.ghost(b.pin(dot,'k'),b.pin(bolt,'n'));
+  b.on('burn',()=>say('dot','Ouch, I popped! Tap me and I will be as good as new.','Tap me for a new Dot!'));
   say('dot','Draw the dotted wires to make my loop.','Draw my loop!');
   await waitUntil(()=>b.ghostsDone());await wait(500);
-  await line('dot','Uh oh, I am dark! I am facing the wrong way. Look, my long leg is on the minus side.','Wrong way round!');
+  await line('dot','Uh oh, I am dark! I am facing the wrong way. My PLUS leg is on Bolt\'s MINUS side.','Wrong way round!');
   dot.o.flip=true;say('dot','Tap me to turn me round!','Tap me to turn round!');
   await waitUntil(()=>dot.bright>.3);await wait(400);
-  await line('dot','Yay! Long leg to plus, and I shine!','I shine!');
+  await line('dot','Yay! My PLUS leg round to Bolt\'s PLUS, and I shine!','I shine!');
   /* B: bodyguard */
   stage();
   b=new Board();bolt=b.add('bolt',250,320);dot=b.add('dot',700,280);
@@ -327,9 +336,12 @@ async function ch7(){
   stage();
   b=new Board();bolt=b.add('bolt',200,320);rez=b.add('rez',480,180);dot=b.add('dot',780,290);
   b.ghost(b.pin(bolt,'p'),b.pin(rez,'a'));b.ghost(b.pin(rez,'b'),b.pin(dot,'a'));b.ghost(b.pin(dot,'k'),b.pin(bolt,'n'));
+  b.on('burn',()=>say('dot','Ouch, I popped again! Tap me and I will be as good as new.','Tap me for a new Dot!'));
   say('rez','Here is a new Dot. Put me in the loop to keep her safe.','Put Rez in the loop!');
   await waitUntil(()=>dot.bright>.3);await wait(400);
   await line('dot','Thanks, Rez! I am shining, and I did not pop!','Safe and shining!');
+  await talk([['zip','Hang on, Rez. The Zips come out of Bolt\'s minus end, so we reach Dot FIRST and you second. How does that keep her safe?','Rez is after the light?'],
+    ['rez','Good spotting. One loop is like one train... every Zip in it moves together. Slow the train anywhere, and the whole loop slows. So I can stand before Dot or after her... it works just the same.','One loop slows all together']]);
   /* C: series */
   stage();
   b=new Board();bolt=b.add('bolt',150,330);const gs=[380,580,780].map(x=>b.add('glow',x,240,{unscrew:false}));
