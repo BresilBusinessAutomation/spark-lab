@@ -49,6 +49,12 @@ async function ch1(){
     {n:'chair',e:0,d:()=>`<path d="M-20 -40 V40 M20 0 V40 M-20 0 H20 M-20 -40 H14" stroke="#A87A43" stroke-width="8" stroke-linecap="round"/>`,m:"A chair doesn't need electricity."}
   ];
   let found=0;
+  /* The list alternates uses-electricity / doesn't and the grid below is 4 wide, so in
+     list order every electrical item lands in column 1 or 3 and the answers read as
+     vertical stripes. Shuffle, rejecting any layout with a uniform row or column. */
+  const lanes=()=>{const L=[];for(let c=0;c<4;c++)L.push(items.filter((_,i)=>i%4===c));for(let r=0;r<3;r++)L.push(items.slice(r*4,r*4+4));return L;};
+  const striped=()=>lanes().some(l=>l.every(it=>it.e)||l.every(it=>!it.e));
+  let guard=0;do{for(let i=items.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[items[i],items[j]]=[items[j],items[i]];}}while(striped()&&++guard<60);
   items.forEach((it,i)=>{const x=150+(i%4)*233,y=125+Math.floor(i/4)*175;const node=g('',x,y);const draw=on=>{node.innerHTML=`<circle r="72" fill="transparent"/><g>${it.d(on)}</g><text y="78" text-anchor="middle" ${FONT} font-size="22" fill="${I}">${it.n}</text>`;};draw(false);
     tapper(node,()=>{if(it.done)return;if(it.e){it.done=true;draw(true);sfx.ding();found++;setProgress(found,6);say('zip',it.m,'Uses electricity!');if(found===6)later(()=>node.dispatchEvent(new Event('alldone')),10);}else{sfx.bonk();const c=node.querySelector('g');c.classList.remove('wob');void c.getBoundingClientRect();c.classList.add('wob');say('zip',it.m,'No electricity!');}});});
   setProgress(0,6);
@@ -90,8 +96,8 @@ async function ch2(){
   /* meet Bolt */
   stage();
   spot('bolt',{mood:'grin'},360,290,1.6,'Bolt','battery');
-  el('text',{x:330,y:118,'text-anchor':'middle','font-family':'Baloo 2','font-weight':800,'font-size':56,fill:C.red}).textContent='+';
-  el('text',{x:330,y:430,'text-anchor':'middle','font-family':'Baloo 2','font-weight':800,'font-size':56,fill:C.blue}).textContent='−';
+  el('text',{x:360,y:170,'text-anchor':'middle','font-family':'Baloo 2','font-weight':800,'font-size':56,fill:C.red}).textContent='+';
+  el('text',{x:360,y:440,'text-anchor':'middle','font-family':'Baloo 2','font-weight':800,'font-size':56,fill:C.blue}).textContent='−';
   const hl=g('',0,0);
   await line('bolt',"G'day! I'm Bolt, a battery! I don't spin. I keep energy stored inside me, made by special chemicals. Like a lunchbox full of energy!","I store energy!");
   hl.innerHTML=`<circle cx="360" cy="150" r="46" fill="none" stroke="${C.red}" stroke-width="6" class="pulse"/>`;
