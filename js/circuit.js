@@ -4,16 +4,16 @@ const RVALS=[10,33,100,470];
 const RNAME={10:'tiny',33:'small',100:'medium',470:'big'};
 const PD={
   bolt:{pins:[['p',0,-64],['n',0,60]],label:()=>['Bolt','battery'],draw:p=>`<g transform="scale(.7)">${CH.bolt({mood:p.hot?'ouch':(Math.abs(p.I)>0.005?'grin':'happy'),hot:p.hot,rev:p.rev})}</g>`,key:p=>`${p.hot}${p.rev}${Math.abs(p.I)>0.005}`,lab:[0,122],pinLab:p=>p.rev?['−','+']:['+','−']},
-  glow:{pins:[['a',-32,32],['b',32,32]],label:()=>['Glow','bulb'],draw:p=>`<g transform="scale(.7)">${CH.glow({level:p.bright,mood:p.out?'sad':(p.bright>0.05?'grin':'happy'),out:p.out})}</g>`,key:p=>`${p.out}${(p.bright*20|0)}`,lab:[0,70]},
+  glow:{pins:[['a',-32,32],['b',32,32]],label:()=>['Glow','bulb'],draw:p=>`<g transform="scale(.7)">${CH.glow({level:p.bright,mood:p.out?'sad':(p.bright>0.05?'grin':'happy'),out:p.out})}</g>`,key:p=>`${p.out}${(p.bright*20|0)}`,lab:[0,96],pinLab:()=>['−','+']},
   dot:{pins:[['a',-28,50],['k',28,50]],label:()=>['Dot','LED'],draw:p=>`<g transform="scale(${p.rev?-.7:.7} .7)">${CH.dot({color:p.color||C.red,lit:p.bright>0.03,level:.35+.65*p.bright,mood:p.bright>0.03?'grin':'happy',burnt:p.burnt})}<path d="M-13 62 L-40 72 M13 52 L40 72" stroke="#9AA3B5" stroke-width="6" stroke-linecap="round"/></g>`,key:p=>`${p.rev}${p.burnt}${(p.bright*20|0)}${p.color}`,lab:[0,112],pinLab:p=>p.rev?['− short','+ long']:['+ long','− short']},
-  rez:{pins:[['a',-58,0],['b',58,0]],label:p=>['Rez',`${RNAME[p.R]||''} resistor`],draw:p=>`<g transform="scale(.55)">${CH.rez({R:p.R,warm:p.warm,mood:'sleepy'})}</g>`,key:p=>`${p.R}${p.warm}`,lab:[0,40]},
-  swish:{pins:[['a',-54,-20],['b',54,-20]],label:()=>['Swish','switch'],draw:p=>`<g transform="scale(.72)">${CH.swish({closed:p.closed,mood:p.closed?'grin':'happy'})}</g>`,key:p=>`${p.closed}`,lab:[0,50]},
-  cap:{pins:[['a',-26,54],['b',26,54]],label:()=>['Cap','capacitor'],draw:p=>`<g transform="scale(.6)">${CH.cap({fill:p.fill,mood:p.fill>.9?'wow':'happy'})}<path d="M-14 78 L-43 90 M14 78 L43 90" stroke="#9AA3B5" stroke-width="6" stroke-linecap="round"/></g>`,key:p=>`${(p.fill*20|0)}`,lab:[0,84]},
-  spinny:{pins:[['a',-48,4],['b',48,4]],label:()=>['Spinny','motor'],draw:p=>`<g transform="scale(.7)">${CH.spinny({angle:p.angle,mood:Math.abs(p.speed)>.6?'grin':(Math.abs(p.speed)>.05?'happy':'sleepy')})}</g>`,key:p=>Math.abs(p.speed)>0.01?Math.random():'still',lab:[0,52]},
-  buzz:{pins:[['a',-46,8],['b',46,8]],label:()=>['Buzz','buzzer'],draw:p=>`<g transform="scale(.7)">${CH.buzz({on:p.on})}</g>`,key:p=>p.on?Math.random():'off',lab:[0,52]},
-  boomer:{pins:[['a',-46,22],['b',46,22]],label:()=>['Boomer','speaker'],draw:p=>`<g transform="scale(.52)">${CH.boomer({pulse:p.on?(Math.sin(performance.now()/40)+1)/2:0})}</g>`,key:p=>p.on?Math.random():'off',lab:[0,62]},
+  rez:{pins:[['a',-58,0],['b',58,0]],label:p=>['Rez',`${RNAME[p.R]||''} resistor`],draw:p=>`<g transform="scale(.55)">${CH.rez({R:p.R,warm:p.warm,mood:'sleepy'})}</g>`,key:p=>`${p.R}${p.warm}`,lab:[0,54],pinLab:()=>['+','−']},
+  swish:{pins:[['a',-54,-20],['b',54,-20]],label:()=>['Swish','switch'],draw:p=>`<g transform="scale(.72)">${CH.swish({closed:p.closed,mood:p.closed?'grin':'happy'})}</g>`,key:p=>`${p.closed}`,lab:[0,50],pinLab:()=>['+','−']},
+  cap:{pins:[['a',-26,54],['b',26,54]],label:()=>['Cap','capacitor'],draw:p=>`<g transform="scale(.6)">${CH.cap({fill:p.fill,mood:p.fill>.9?'wow':'happy'})}<path d="M-14 78 L-43 90 M14 78 L43 90" stroke="#9AA3B5" stroke-width="6" stroke-linecap="round"/></g>`,key:p=>`${(p.fill*20|0)}`,lab:[0,108],pinLab:()=>['+','−']},
+  spinny:{pins:[['a',-48,4],['b',48,4]],label:()=>['Spinny','motor'],draw:p=>`<g transform="scale(.7)">${CH.spinny({angle:p.angle,mood:Math.abs(p.speed)>.6?'grin':(Math.abs(p.speed)>.05?'happy':'sleepy')})}</g>`,key:p=>Math.abs(p.speed)>0.01?Math.random():'still',lab:[0,58],pinLab:()=>['+','−']},
+  buzz:{pins:[['a',-46,8],['b',46,8]],label:()=>['Buzz','buzzer'],draw:p=>`<g transform="scale(.7)">${CH.buzz({on:p.on})}</g>`,key:p=>p.on?Math.random():'off',lab:[0,62],pinLab:()=>['+','−']},
+  boomer:{pins:[['a',-46,22],['b',46,22]],label:()=>['Boomer','speaker'],draw:p=>`<g transform="scale(.52)">${CH.boomer({pulse:p.on?(Math.sin(performance.now()/40)+1)/2:0})}</g>`,key:p=>p.on?Math.random():'off',lab:[0,76],pinLab:()=>['+','−']},
   tran:{pins:[['c',-30,64],['b',0,70],['e',30,64]],label:()=>['Tran','transistor'],draw:p=>`<g transform="scale(.8)">${CH.tran({open:p.open>.3})}</g><path d="M-12 50 L-30 64 M0 52 L0 70 M12 50 L30 64" stroke="#9AA3B5" stroke-width="5" stroke-linecap="round"/>${p.open>.02?`<rect x="-46" y="-70" width="92" height="12" rx="6" fill="#E3EAF6"/><rect x="-46" y="-70" width="${(92*p.open).toFixed(0)}" height="12" rx="6" fill="${C.yellow}"/>`:''}`,key:p=>`${(p.open*10|0)}`,lab:[0,-88],pinLab:()=>['in','button','out']},
-  touch:{pins:[['a',-46,0],['b',46,0]],label:()=>['Touch pad',''],draw:p=>`<rect x="-30" y="-30" width="60" height="60" rx="14" fill="${p.held?'#FFE066':'#F2C230'}" stroke="${I}" stroke-width="4"/><path d="M-14 12 a14 14 0 0 1 28 0 M-20 14 a20 20 0 0 1 40 0 M-8 10 a8 8 0 0 1 16 0" stroke="#8A5A00" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 -6)"/><path d="M-30 0 H-46 M30 0 H46" stroke="#9AA3B5" stroke-width="5"/>`,key:p=>`${p.held}`,lab:[0,50]},
+  touch:{pins:[['a',-46,0],['b',46,0]],label:()=>['Touch pad',''],draw:p=>`<rect x="-30" y="-30" width="60" height="60" rx="14" fill="${p.held?'#FFE066':'#F2C230'}" stroke="${I}" stroke-width="4"/><path d="M-14 12 a14 14 0 0 1 28 0 M-20 14 a20 20 0 0 1 40 0 M-8 10 a8 8 0 0 1 16 0" stroke="#8A5A00" stroke-width="3" fill="none" stroke-linecap="round" transform="translate(0 -6)"/><path d="M-30 0 H-46 M30 0 H46" stroke="#9AA3B5" stroke-width="5"/>`,key:p=>`${p.held}`,lab:[0,54],pinLab:()=>['+','−']},
   rail:{pins:Array.from({length:6},(_,i)=>['r'+i,-160+i*64,0]),label:p=>[p.sign==='+'?'Plus rail':'Minus rail',''],draw:p=>`<rect x="-180" y="-12" width="360" height="24" rx="12" fill="${p.sign==='+'?'#FFD9D6':'#D9E4FF'}" stroke="${p.sign==='+'?C.red:C.blue}" stroke-width="4"/><text x="-196" y="9" text-anchor="middle" ${FONT} font-size="26" fill="${p.sign==='+'?C.red:C.blue}">${p.sign==='+'?'+':'−'}</text>`,key:()=>'r',lab:null},
   /* guitar parts: wiring only */
   pipG:{pins:[['h',-30,34],['g',30,34]],label:p=>[p.name||'Pip','pickup'],draw:p=>`<g transform="scale(.55)">${CH.pip({mood:p.awake?'cool':'happy'})}</g><path d="M-14 12 L-30 34 M14 12 L30 34" stroke="#9AA3B5" stroke-width="4"/>`,key:p=>`${p.awake}`,lab:[0,-46],pinLab:()=>['hot','ground']},
@@ -23,6 +23,14 @@ const PD={
   jack:{pins:[['t',-34,44],['s',34,44]],label:()=>['Jack','output'],draw:p=>`<circle r="30" fill="#B8C5DB" stroke="${I}" stroke-width="4"/><circle r="13" fill="${I}"/><path d="M-14 24 L-34 44 M14 24 L34 44" stroke="#9AA3B5" stroke-width="4"/>`,key:()=>'j',lab:[0,-46],pinLab:()=>['tip','sleeve']},
   gnd:{pins:[['g',0,-40]],label:()=>['Ground','the way home'],draw:p=>`<path d="M0 -40 V0 M-40 0 H40 M-26 14 H26 M-12 28 H12" stroke="#127A4A" stroke-width="7" stroke-linecap="round"/>`,key:()=>'g',lab:[0,62]}
 };
+/* Freehand wires. A drawn wire's points are stored in a frame built from its two pin
+   positions - t along the pin-to-pin line, u across it, both as fractions of its length -
+   so the wire keeps its drawn shape if a part is later dragged somewhere else. */
+function normPts(q,A,B){const dx=B.x-A.x,dy=B.y-A.y,L2=dx*dx+dy*dy||1;return q.map(P=>[((P.x-A.x)*dx+(P.y-A.y)*dy)/L2,((P.y-A.y)*dx-(P.x-A.x)*dy)/L2]);}
+function denormPts(n,A,B){const dx=B.x-A.x,dy=B.y-A.y;return n.map(([t,u])=>({x:A.x+t*dx-u*dy,y:A.y+t*dy+u*dx}));}
+function smoothPath(q){if(!q||q.length<2)return '';let d=`M${q[0].x.toFixed(1)} ${q[0].y.toFixed(1)}`;if(q.length===2)return d+` L${q[1].x.toFixed(1)} ${q[1].y.toFixed(1)}`;
+  for(let i=1;i<q.length-1;i++){const mx=(q[i].x+q[i+1].x)/2,my=(q[i].y+q[i+1].y)/2;d+=` Q${q[i].x.toFixed(1)} ${q[i].y.toFixed(1)} ${mx.toFixed(1)} ${my.toFixed(1)}`;}
+  const L=q[q.length-1];return d+` L${L.x.toFixed(1)} ${L.y.toFixed(1)}`;}
 let WID=0;
 class Board{
   constructor(opts={}){
@@ -50,7 +58,7 @@ class Board{
   drawPart(p,force){const d=PD[p.type];const k=String(d.key(p));if(force||k!==p._k){p._k=k;p.body.innerHTML=d.draw(p);if(p.pinTxt)this.place(p);if(d.lab&&p.labG){const[nm,rl]=d.label(p);const h=pill(0,0,nm,rl);if(h!==p._lab){p._lab=h;p.labG.innerHTML=h;}}}}
   same(a,b){return a.p===b.p&&a.k===b.k;}
   has(a,b){return this.wires.some(w=>(this.same(w.a,a)&&this.same(w.b,b))||(this.same(w.a,b)&&this.same(w.b,a)));}
-  wire(a,b,o={}){if(this.same(a,b)||this.has(a,b))return null;const w={a,b,id:++WID,fixed:!!o.fixed,I:0,off:0};
+  wire(a,b,o={}){if(this.same(a,b)||this.has(a,b))return null;const w={a,b,id:++WID,fixed:!!o.fixed,I:0,off:0,pts:o.pts||null};
     w.path=el('path',{fill:'none',stroke:o.color||C.orange,'stroke-width':9,'stroke-linecap':'round'},this.wireL);
     w.hit=el('path',{fill:'none',stroke:'transparent','stroke-width':26,class:'wirehit','data-wid':w.id},this.hitL);
     w.dotG=el('g',{},this.flowL);this.wires.push(w);this.shape(w);this.dirty=true;this.updGhosts();this.emit('change');return w;}
@@ -60,20 +68,21 @@ class Board{
   updGhosts(){this.ghosts.forEach(gh=>gh.el.style.display=this.has(gh.a,gh.b)?'none':'');}
   ghostsDone(){return this.ghosts.every(gh=>this.has(gh.a,gh.b));}
   curve(A,B,same){const mx=(A.x+B.x)/2,my=(A.y+B.y)/2;const dx=B.x-A.x,dy=B.y-A.y;const L=Math.hypot(dx,dy)||1;const s=same?110:Math.min(40,L*.12);return `M${A.x.toFixed(1)} ${A.y.toFixed(1)} Q${(mx-dy/L*s).toFixed(1)} ${(my+dx/L*s).toFixed(1)} ${B.x.toFixed(1)} ${B.y.toFixed(1)}`;}
-  shape(w){const d=this.curve(this.pinPos(w.a),this.pinPos(w.b),w.a.p===w.b.p);w.path.setAttribute('d',d);w.hit.setAttribute('d',d);w.len=w.path.getTotalLength()||1;}
+  shape(w){const A=this.pinPos(w.a),B=this.pinPos(w.b);const d=w.pts?smoothPath(denormPts(w.pts,A,B)):this.curve(A,B,w.a.p===w.b.p);w.path.setAttribute('d',d);w.hit.setAttribute('d',d);w.len=w.path.getTotalLength()||1;}
   shapeGhost(gh){gh.el.setAttribute('d',this.curve(this.pinPos(gh.a),this.pinPos(gh.b),gh.a.p===gh.b.p));}
   /* ---- pointer ---- */
   down(e){const pin=e.target.closest('.pin'),part=e.target.closest('.part'),wh=e.target.closest('.wirehit');
-    if(pin&&this.o.canWire){e.preventDefault();A();const p=this.parts.find(q=>q.id==pin.dataset.pid);this.drag={kind:'wire',from:{p,k:+pin.dataset.k}};this.tmp=el('path',{fill:'none',stroke:C.orange,'stroke-width':9,'stroke-linecap':'round',opacity:.8},this.dragL);sfx.pick();return;}
+    if(pin&&this.o.canWire){e.preventDefault();A();const p=this.parts.find(q=>q.id==pin.dataset.pid);this.drag={kind:'wire',from:{p,k:+pin.dataset.k},pts:[this.pinPos({p,k:+pin.dataset.k})]};this.tmp=el('path',{fill:'none',stroke:C.orange,'stroke-width':9,'stroke-linecap':'round',opacity:.8},this.dragL);sfx.pick();return;}
     if(part){e.preventDefault();A();const p=this.parts.find(q=>q.id==part.dataset.part);const pt=toSvg(e);this.drag={kind:'part',p,start:pt,off:{x:pt.x-p.x,y:pt.y-p.y},moved:false};if(p.type==='touch'){p.held=true;this.dirty=true;}return;}
     if(wh&&this.o.deleteWires){const w=this.wires.find(x=>x.id==wh.dataset.wid);if(w&&!w.fixed){sfx.cut();this.rmWire(w);this.emit('cut',w);}}}
   move(e){if(!this.drag)return;const pt=toSvg(e);
-    if(this.drag.kind==='wire'){const A0=this.pinPos(this.drag.from);this.tmp.setAttribute('d',`M${A0.x} ${A0.y} L${pt.x} ${pt.y}`);return;}
+    if(this.drag.kind==='wire'){const q=this.drag.pts,l=q[q.length-1];if(Math.hypot(pt.x-l.x,pt.y-l.y)>10)q.push({x:pt.x,y:pt.y});this.tmp.setAttribute('d',smoothPath(q.concat([{x:pt.x,y:pt.y}])));return;}
     const d=this.drag;if(!d.moved&&Math.hypot(pt.x-d.start.x,pt.y-d.start.y)>8&&this.mov(d.p))d.moved=true;
     if(d.moved){d.p.x=clamp(pt.x-d.off.x,40,960);d.p.y=clamp(pt.y-d.off.y,40,560);this.place(d.p);this.wires.forEach(w=>{if(w.a.p===d.p||w.b.p===d.p)this.shape(w);});this.ghosts.forEach(gh=>this.shapeGhost(gh));if(this.o.onMove)this.o.onMove(d.p,pt);}}
   up(e){const d=this.drag;if(!d)return;this.drag=null;const pt=toSvg(e);
     if(d.kind==='wire'){this.tmp.remove();let best=null,bd=34;this.parts.forEach(p=>PD[p.type].pins.forEach((pd,k)=>{const P={x:p.x+pd[1],y:p.y+pd[2]};const dd=Math.hypot(P.x-pt.x,P.y-pt.y);if(dd<bd&&!(p===d.from.p&&k===d.from.k)){bd=dd;best={p,k};}}));
-      if(best){if(this.o.allow&&!this.o.allow(d.from,best)){sfx.bonk();return;}const w=this.wire(d.from,best);if(w){sfx.snap();this.emit('wire',w);}}return;}
+      if(best){if(this.o.allow&&!this.o.allow(d.from,best)){sfx.bonk();return;}const A=this.pinPos(d.from),B=this.pinPos(best);const q=d.pts.concat([{x:pt.x,y:pt.y}]);q[0]=A;q[q.length-1]=B;
+      const w=this.wire(d.from,best,{pts:q.length>2?normPts(q,A,B):null});if(w){sfx.snap();this.emit('wire',w);}}return;}
     const p=d.p;if(p.type==='touch'){p.held=false;this.dirty=true;}
     if(d.moved){if(this.o.onDrop)this.o.onDrop(p,pt);this.emit('change');return;}
     this.tap(p);}
