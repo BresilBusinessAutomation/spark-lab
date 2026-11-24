@@ -497,12 +497,13 @@ async function ch10(){
   const coilG=g(`${[...Array(10)].map((_,i)=>`<ellipse cx="${400+i*22}" cy="320" rx="9" ry="44" fill="none" stroke="#D9792B" stroke-width="6"/>`).join('')}`);
   label(500,410,'Coil of wire','');
   el('path',{d:'M400 276 V150 H470 M600 276 V150 H530',stroke:C.orange,'stroke-width':8,fill:'none'});
+  const zf1=flow('M400 276 V150 H470',{n:4,speed:160}),zf2=flow('M530 150 H600 V276',{n:4,speed:160});
   const meter=g('',500,140);
   let mx=180,lastX=180,energy=0,lvl=0,dragM=false;const mag=g('',mx,320);
   const drawMag=()=>{mag.setAttribute('transform',`translate(${mx.toFixed(1)} 320)`);mag.innerHTML=`<rect x="-70" y="-24" width="70" height="48" rx="6" fill="${C.red}" stroke="${I}" stroke-width="4"/><rect x="0" y="-24" width="70" height="48" rx="6" fill="${C.blue}" stroke="${I}" stroke-width="4"/><text x="-35" y="10" text-anchor="middle" ${FONT} font-size="26" fill="#fff">N</text><text x="35" y="10" text-anchor="middle" ${FONT} font-size="26" fill="#fff">S</text>${pill(0,70,'Magnet','drag me')}`;};drawMag();
   mag.style.cursor='grab';mag.addEventListener('pointerdown',e=>{e.preventDefault();A();dragM=true;});const mv=e=>{if(dragM)mx=clamp(toSvg(e).x,120,880);};const up=()=>dragM=false;window.addEventListener('pointermove',mv);window.addEventListener('pointerup',up);cleanups.push(()=>{window.removeEventListener('pointermove',mv);window.removeEventListener('pointerup',up);});
-  addTick(dt=>{const v=(mx-lastX)/Math.max(dt,.001);lastX=mx;const inCoil=Math.max(0,1-Math.abs(mx-500)/220);const sig=clamp(v*inCoil/600,-1,1);lvl=lvl*.8+sig*.2;energy+=Math.abs(lvl)*dt;drawMag();meter.innerHTML=`<circle cx="0" cy="-40" r="40" fill="${C.yellow}" opacity="${(Math.abs(lvl)*.6).toFixed(2)}"/><circle cx="0" cy="-40" r="22" fill="${mix('#EEF2F8','#FFE066',Math.abs(lvl)*1.5)}" stroke="${I}" stroke-width="4"/>${pill(0,-90,'Light','')}`;});
-  say('mic','Here is my secret. Drag the magnet in and out of the coil, quickly!','Drag the magnet in and out!');
+  addTick(dt=>{const v=(mx-lastX)/Math.max(dt,.001);lastX=mx;const inCoil=Math.max(0,1-Math.abs(mx-500)/220);const sig=clamp(v*inCoil/600,-1,1);lvl=lvl*.8+sig*.2;energy+=Math.abs(lvl)*dt;drawMag();const sp=Math.abs(lvl);zf1.on=zf2.on=sp>.05;zf1.speed=zf2.speed=90+sp*700;meter.innerHTML=`<circle cx="0" cy="-40" r="40" fill="${C.yellow}" opacity="${(Math.abs(lvl)*.6).toFixed(2)}"/><circle cx="0" cy="-40" r="22" fill="${mix('#EEF2F8','#FFE066',Math.abs(lvl)*1.5)}" stroke="${I}" stroke-width="4"/>${pill(0,-90,'Light','')}`;});
+  say('mic','Here is my secret. Drag the magnet in and out of the coil, quickly! Watch the Zips being pushed along the wire.','Drag the magnet in and out!');
   await waitUntil(()=>energy>0.8);await wait(500);
   await line('mic','See the light flicker? When a magnet moves near a coil, it pushes Zips along. Just like the windmill!','Moving magnet pushes Zips!');
   /* inside mic */
@@ -536,10 +537,50 @@ async function ch10(){
   await line('boomer','I do it backwards! Wiggly electricity goes into my coil. It becomes a wiggly magnet that pushes my cone in and out.','Coil pushes my cone');
   say('boomer','The cone wiggles the air, and you hear it! Tap Play!','Tap Play!');
   await waitUntil(()=>played>=1);await wait(1800);
+  /* record and play it back - Mic and Boomer together on one screen */
+  stage();
+  const mR=g('',250,240,1.25),bR=g('',760,240,1.25);
+  label(250,370,'Mic','records you');label(760,370,'Boomer','plays it back');
+  const wv2=el('path',{fill:'none',stroke:C.orange,'stroke-width':6,'stroke-linecap':'round'});
+  let recOn=false,recLvl=0,playLvl=0,haveRec=false,plays=0;
+  let mrec=null,mchunks=[],mUrl=null,mAnal=null,mData=null,mStream=null;
+  addTick(dt=>{
+    if(mAnal&&recOn){mAnal.getByteTimeDomainData(mData);let s2=0;for(let i=0;i<mData.length;i++){const v=(mData[i]-128)/128;s2+=v*v;}recLvl=Math.sqrt(s2/mData.length)*4;}else recLvl*=.88;
+    playLvl=Math.max(0,playLvl-dt*1.6);
+    mR.innerHTML=CH.mic({ear:clamp(recLvl),mood:recOn?'wow':'happy'});
+    bR.innerHTML=CH.boomer({pulse:playLvl});
+    const amp2=clamp(recLvl)*34+playLvl*34,tt=performance.now()/38;
+    let d2='M340 240';for(let x=350;x<=670;x+=10)d2+=` L${x} ${(240+Math.sin(x/11+tt)*amp2).toFixed(1)}`;
+    wv2.setAttribute('d',d2);});
+  const recB=holdBtn(250,480,'RECORD',58,C.red);
+  const playB=sbtn(760,480,'Play it back',{w:250,size:26});
+  async function recStart(){if(recOn)return;
+    try{
+      mStream=await navigator.mediaDevices.getUserMedia({audio:true});
+      const a=A();const src=a.createMediaStreamSource(mStream);mAnal=a.createAnalyser();mAnal.fftSize=1024;mData=new Uint8Array(mAnal.fftSize);src.connect(mAnal);
+      mrec=new MediaRecorder(mStream);mchunks=[];
+      mrec.ondataavailable=e=>{if(e.data&&e.data.size)mchunks.push(e.data);};
+      mrec.onstop=()=>{try{const bl=new Blob(mchunks,{type:mrec.mimeType||'audio/webm'});if(mUrl)URL.revokeObjectURL(mUrl);mUrl=URL.createObjectURL(bl);haveRec=true;}catch(e){}
+        if(mStream){mStream.getTracks().forEach(t=>t.stop());mStream=null;}mAnal=null;};
+      mrec.start();recOn=true;
+    }catch(e){recOn=false;mAnal=null;say('mic','I cannot hear your microphone, but tap Play it back and Boomer will still sing!','No mic? Tap Play!');}}
+  function recStop(){if(!recOn)return;recOn=false;try{if(mrec&&mrec.state!=='inactive')mrec.stop();}catch(e){}}
+  recB.node.addEventListener('pointerdown',()=>{recStart();});
+  ['pointerup','pointerleave','pointercancel'].forEach(ev=>recB.node.addEventListener(ev,()=>recStop()));
+  cleanups.push(()=>{try{recStop();}catch(e){}if(mStream)mStream.getTracks().forEach(t=>t.stop());if(mUrl)URL.revokeObjectURL(mUrl);});
+  tapper(playB,()=>{plays++;
+    if(haveRec&&mUrl){const au=new Audio(mUrl);au.play().catch(()=>{});playLvl=1;
+      const iv=setInterval(()=>{playLvl=1;},120);au.onended=()=>{clearInterval(iv);playLvl=.6;};later(()=>clearInterval(iv),6000);}
+    else{[523,659,784,659,523].forEach((f,i)=>later(()=>{sfx.note(f);playLvl=1;},i*240));}});
+  await line('mic','Now the best bit! Hold RECORD and say something. I will turn your voice into wiggly electricity and keep it.','Hold RECORD and talk!');
+  say('boomer','Then tap Play it back, and I will turn it into sound again!','Then tap Play!');
+  await waitUntil(()=>plays>=1&&playLvl<=0);await wait(400);
+  await talk([['mic','That was your voice, turned into wiggly electricity.','Voice to electricity'],
+    ['boomer','And I turned those same wiggles straight back into sound!','Electricity to sound']]);
   /* echo game */
   stage();
-  const micB=g('',220,230,1.1),boomB=g('',780,230,1.1);label(220,340,'Mic','listens');label(780,340,'Boomer','plays');
   el('path',{d:'M220 360 V390 H780 V360',stroke:'#C9D3E3','stroke-width':10,fill:'none'});
+  const micB=g('',220,230,1.1),boomB=g('',780,230,1.1);label(220,340,'Mic','listens');label(780,340,'Boomer','plays');
   const wv=el('path',{fill:'none',stroke:C.orange,'stroke-width':6,'stroke-linecap':'round'});
   const notes=[523.25,587.33,659.25,783.99,880],cols=[C.red,C.orange,C.yellow,'#2BB673',C.blue];
   const pads=notes.map((f,i)=>{const p=g(`<circle r="54" fill="transparent"/><circle r="46" fill="${cols[i]}" stroke="${I}" stroke-width="5"/><path d="M-4 14 V-18 l18 6" stroke="${I}" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="-11" cy="14" r="8" fill="${I}"/>`,260+i*120,505);p.style.cursor='pointer';p.addEventListener('pointerdown',e=>{e.preventDefault();A();press(i);});return p;});
@@ -547,13 +588,20 @@ async function ch10(){
   addTick(dt=>{pulse=Math.max(0,pulse-dt*3);earv=Math.max(0,earv-dt*2);amp=Math.max(0,amp-dt*28);hi=hi.map(v=>Math.max(0,v-dt*3));boomB.innerHTML=CH.boomer({pulse});micB.innerHTML=CH.mic({ear:earv,mood:earv>.2?'wow':'happy'});
     let d='M300 390';const t=performance.now()/55;for(let x=310;x<=700;x+=10)d+=` L${x} ${(390+Math.sin(x/12+t)*amp).toFixed(1)}`;wv.setAttribute('d',d);wv.style.display=amp>.5?'':'none';pads.forEach((p,i)=>place(p,260+i*120,505,1+hi[i]*.2));});
   const play=(i,fromMic)=>{sfx.note(notes[i]);pulse=1;amp=14;hi[i]=1;if(fromMic)earv=1;};
-  const seqs=[[0,2],[0,2,4],[4,2,0,2]];let round=0,input=[],locked=true,win=false;
-  function press(i){if(locked)return;play(i,false);const s=seqs[round];input.push(i);
-    if(i!==s[input.length-1]){locked=true;sfx.bonk();say('mic','Almost! Listen again.','Listen again!').then(playSeq);return;}
-    if(input.length===s.length){locked=true;sfx.ding();round++;setProgress(round,3);if(round>=3)win=true;else say('mic','Perfect! Here comes a longer one.','A longer one!').then(playSeq);}}
-  async function playSeq(){locked=true;input=[];const s=seqs[round];for(const n of s){play(n,true);await wait(650);}locked=false;say('zip','Your turn! Play it on Boomer.','Your turn!');}
-  setProgress(0,3);
-  await line('mic','Now a game! I listen to a tune, then you play it back on Boomer\'s buttons.','Listen, then copy!');
+  const rnd=()=>Math.floor(Math.random()*notes.length);
+  const seq=[rnd(),rnd()];let round=0,input=[],locked=true,win=false;
+  const roundT=el('text',{x:500,y:120,'text-anchor':'middle','font-family':'Baloo 2','font-weight':800,'font-size':24,fill:C.grey});
+  const showRound=()=>roundT.textContent=`Round ${round+1} - ${seq.length} notes`;
+  const nextB=sbtn(880,110,'Next',{w:140,size:24});
+  tapper(nextB,()=>{if(round>0)win=true;else{sfx.bonk();say('mic','Have a go at one round first!','One round first!');}});
+  function press(i){if(locked)return;play(i,false);input.push(i);
+    if(i!==seq[input.length-1]){locked=true;sfx.bonk();say('mic','Almost! Listen again.','Listen again!').then(playSeq);return;}
+    if(input.length===seq.length){locked=true;sfx.ding();round++;seq.push(rnd());
+      say('mic','Perfect! Here is the same tune, with one more note on the end.','One more note!').then(playSeq);}}
+  async function playSeq(){locked=true;input=[];showRound();for(const n of seq){play(n,true);await wait(650);}locked=false;say('zip','Your turn! Play it on Boomer.','Your turn!');}
+  setProgress(0,0);
+  await line('mic','Now a game! I play a tune, you play it back on Boomer\'s buttons. Each round I keep the same tune and add one more note. Tap Next when you have had enough.','Listen, then copy!');
+  showRound();
   playSeq();
   await waitUntil(()=>win);await wait(500);
   await talk([['boomer','YEAH! Music superstar!','Superstar!'],['mic','I turn sound into electricity.','Sound → electricity'],['boomer','And I turn electricity back into sound!','Electricity → sound']]);
@@ -561,12 +609,20 @@ async function ch10(){
 
 /* ================= 11. Tran ================= */
 async function ch11(){
-  stage();const sp=spot('tran',{},500,220,2.2,'Tran','transistor');
+  stage();const sp=spot('tran',{},500,185,1.7,'Tran','transistor');
+  /* Tran's gate opens and shuts on a slow loop, with Zips running the pipe below,
+     so the explanation has something moving alongside it */
+  el('path',{d:'M200 530 H800',stroke:'#F8D2C2','stroke-width':14,fill:'none'});
+  const introFlow=flow('M200 530 H800',{n:8,speed:200});
+  label(150,530,'+','');label(850,530,'−','');
+  let io=0,lastO=null;addTick(dt=>{io+=dt*.8;const op=Math.sin(io)*.5+.5>.5;
+    if(op!==lastO){lastO=op;sp.querySelector('.bob').innerHTML=CH.tran({open:op});}
+    introFlow.on=op;introFlow.speed=op?380:110;});
   await talk([['tran',"Hey. I'm Tran. A transistor.","I'm Tran, a transistor"],
     ['tran','I am a switch with no buttons. Swish needs a finger to flip him. I get flipped by a teeny bit of electricity.','A switch flipped by electricity']]);
-  g(`${pill(-80,0,'IN','')}${pill(0,30,'BUTTON','')}${pill(80,0,'OUT','')}`,500,400);
-  await talk([['tran','I have three legs. My middle leg is my BUTTON leg. Then there is my IN leg, and my OUT leg.','Button leg, IN leg, OUT leg'],
-    ['tran','A tiny trickle into my button leg opens my gate, so LOTS of electricity can flow from IN to OUT.','Tiny trickle opens a big gate'],
+  g(`${pill(-180,0,'+ leg','')}${pill(0,0,'BUTTON leg','')}${pill(180,0,'− leg','')}`,500,450);
+  await talk([['tran','I have three legs. The middle one is my BUTTON leg. The other two are my PLUS leg and my MINUS leg, same as everybody else.','Button leg, plus leg, minus leg'],
+    ['tran','A tiny trickle into my button leg opens my gate, so LOTS of electricity can flow from my PLUS leg to my MINUS leg.','Tiny trickle opens a big gate'],
     ['zip','Why is that useful, Tran?','Why is that useful?'],
     ['tran','A tiny signal, like a finger touch or a microphone, can control something big, like a motor or a speaker.','Tiny controls BIG'],
     ['tran','And computers and tablets have billions of tiny Trans inside, switching on and off super fast to think!','Billions in a tablet!']]);
@@ -598,6 +654,10 @@ async function ch11(){
   b.ghost(b.pin(dot,'k'),b.pin(tr,'c'));b.ghost(b.pin(tp,'b'),b.pin(tr,'b'));
   say('tran','Let us build a touch light! Draw the last two dotted wires.','Draw the last two wires');
   await waitUntil(()=>b.ghostsDone());
+  await talk([['zip','Tran, how is that gold touch pad wired up?','How is it wired?'],
+    ['tran','One side of the pad goes to Bolt\'s PLUS. The other side goes straight to my BUTTON leg. So the pad sits in between them.','Plus, then pad, then button leg'],
+    ['tran','There is a gap in the middle of the pad, so on its own nothing gets across. Your finger is a bit squishy and a bit salty, so it bridges the gap and lets a teeny trickle creep over.','Your finger bridges the gap'],
+    ['tran','That trickle is far too small to light Dot by itself. It only has to tickle my button leg, and then I open the big gate for her.','Too small for Dot, big enough for me']]);
   say('tran','Now press and hold the gold touch pad with your mouse.','Hold the touch pad!');
   await waitUntil(()=>tp.held&&dot.bright>.4);await wait(800);
   await talk([['tran','Your touch let a tiny trickle into my button leg. I opened the gate for Dot!','Tiny trickle, Dot shines!'],
@@ -633,10 +693,21 @@ async function ch12(){
   const grounded=()=>[pN,pM,pB].every(p=>b.has(P(p,'g'),P(gd,'g')))&&b.has(P(jack,'s'),P(gd,'g'))&&b.has(P(vol,'g'),P(gd,'g'));
   const toned=()=>b.has(P(tone,'i'),P(s5,'o'))&&b.has(P(tone,'g'),P(gd,'g'));
   let strums=0;const hum=loopSound('sawtooth',100,400);
-  const strum=sbtn(430,545,'Strum!',{w:180,size:28});
-  tapper(strum,()=>{if(!ready()){sfx.bonk();say('pip','Nothing yet! The electricity can\'t reach the amp.','Not connected yet!');return;}strums++;chord(toned()?1400:3200,.5);if(!grounded()){hum.set(.07);later(()=>hum.set(0),1600);}});
+  const strumG=g('',430,487);strumG.style.cursor='pointer';strumG.style.touchAction='none';
+  let gamp=0;
+  addTick((dt,t)=>{gamp=Math.max(0,gamp-dt*6);
+    strumG.innerHTML=`<rect x="-160" y="-60" width="320" height="120" rx="14" fill="transparent"/>`
+      +`<rect x="-10" y="-17" width="150" height="34" rx="6" fill="#D9A86C" stroke="${I}" stroke-width="3"/>`
+      +`<ellipse cx="-72" cy="0" rx="80" ry="54" fill="${C.red}" stroke="${I}" stroke-width="4"/>`
+      +`<circle cx="-62" cy="0" r="19" fill="${I}"/>`
+      +[0,1,2,3,4,5].map(i=>{const y=-20+i*8;return `<path d="M-140 ${y} Q0 ${(y+Math.sin(t/13+i*1.1)*gamp).toFixed(1)} 138 ${y}" stroke="#E8C547" stroke-width="${(2.9-i*.2).toFixed(1)}" fill="none" stroke-linecap="round"/>`;}).join('')
+      +pill(0,64,'Strum me','tap the strings');});
+  strumG.addEventListener('pointerdown',e=>{e.preventDefault();A();
+    if(!ready()){sfx.bonk();say('pip','Nothing yet! The electricity cannot reach the amp.','Not connected yet!');return;}
+    strums++;gamp=9;const gOK=grounded();chord(toned()?1400:3200,gOK?.55:.3);
+    if(!gOK){hum.set(.22);later(()=>hum.set(0),1800);}});
   b.ghost(P(pN,'h'),P(s5,'n'));b.ghost(P(pM,'h'),P(s5,'m'));b.ghost(P(pB,'h'),P(s5,'b'));
-  say('pip','Let us wire a guitar! First, join each Pip\'s HOT wire to Swish 5, the pickup switch.','Pips to the switch!');
+  say('pip','Let us wire a guitar! First, join each Pip\'s PLUS wire to Swish 5, the pickup switch.','Pips to the switch!');
   await waitUntil(()=>b.ghostsDone());b.clearGhosts();
   b.ghost(P(s5,'o'),P(vol,'i'));b.ghost(P(vol,'o'),P(jack,'t'));
   await line('knobby',"Hi! I'm Knobby, the volume knob. I'm a Rez you can turn! Turn me down and I squeeze the signal.","I'm Knobby, a Rez you turn!");
@@ -644,10 +715,13 @@ async function ch12(){
   await waitUntil(()=>b.ghostsDone());b.clearGhosts();
   say('pip','Tap Strum!','Tap Strum!');const s0=strums;await waitUntil(()=>strums>s0);await wait(1700);
   await talk([['pip','Eww! What is that BUZZING?','Eww! Buzzing!'],
-    ['zip','We forgot GROUND! Ground is the way-home wire. It joins all the metal bits to the minus side, so the buzz has somewhere safe to go.','Ground = the way home'],
-    ['zip','Just like the earth wire in your house!','Like the earth wire!']]);
+    ['zip','We forgot the MINUS wires! On a guitar, the minus side has its own name: GROUND.','Minus is called GROUND'],
+    ['pip','Every loop needs a way home. My PLUS wire carries the song to the amp, and ground is the road the Zips come back along.','Ground is the way home'],
+    ['pip','Ground has a second job too. All the metal bits get joined to it: my cover, the strings, the knob cases, the jack. They wrap the song in a metal shield.','All the metal joins ground'],
+    ['zip','Without that shield the wires act like a radio aerial and pick up the hum from the house wiring. That is the buzzing you heard!','The wires became an aerial'],
+    ['pip','It is the same trick as the earth wire in your house. And when you hold the strings on a real guitar, you join yourself to ground too, and the buzz goes quiet!','Touch the strings and it quietens']]);
   [pN,pM,pB].forEach(p=>b.ghost(P(p,'g'),P(gd,'g')));b.ghost(P(jack,'s'),P(gd,'g'));b.ghost(P(vol,'g'),P(gd,'g'));
-  say('pip','Join every GROUND pin to the green ground sign.','Ground wires!');
+  say('pip','Join every MINUS pin to the green ground sign.','Minus wires to ground!');
   await waitUntil(()=>b.ghostsDone());b.clearGhosts();
   say('pip','Strum again!','Strum again!');const s1=strums;await waitUntil(()=>strums>s1);await wait(1500);
   await line('pip','Ahh, no more buzz! Clean and loud!','No more buzz!');
